@@ -23,7 +23,12 @@ git clone https://github.com/NagaResst/StarBot_plugins_lamp.git
 
 ### 启用插件
 在 main.py 中加入以下配置
+
 ```
+# 加载路灯模块
 config.set("CUSTOM_COMMANDS_PACKAGE","starbot.commands.StarBot_plugins_lamp")
+# 允许使用路灯的群号 逗号分割
 config.set("ALLOW_GROUP_USE_SLAMP",[])
+# 路灯记录保留的天数
+config.get("NOTE_EXPIRE_TIME", 7)
 ```

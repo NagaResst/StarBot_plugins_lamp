@@ -9,10 +9,21 @@ from graia.saya.builtins.broadcast import ListenerSchema
 from loguru import logger
 
 from ...utils import config
+from ...utils import redis
+import datetime
+from json import dumps, loads
+
 
 logger.info(f"加载路灯命令模块")
 prefix = config.get("COMMAND_PREFIX")
 _allow_group_list = config.get("ALLOW_GROUP_USE_SLAMP")
+try:
+    expire_day = config.get("NOTE_EXPIRE_TIME")
+    expire_time = expire_day*24*60*60
+except:
+    expire_time = 604800
+
+today = datetime.date.today()
 
 channel = Channel.current()
 
@@ -29,8 +40,8 @@ channel = Channel.current()
     )
 )
 async def slamp_record(app: Ariadne, source: Source, sender: Group, member: Member, message: MessageChain = ResultValue()):
-    logger.info(f"群[{sender.id}] 触发命令 : 路灯  {message} {type(message.display)} ")
-
+    logger.info(f"群[{sender.id}] 触发命令 : 路灯  {message} ")
+    #
     if _allow_group_list is False or len(_allow_group_list) == 0:
         logger.warning(f"由于配置为空的问题，允许所有的群使用路灯功能")
     elif sender.id not in _allow_group_list:
@@ -39,9 +50,43 @@ async def slamp_record(app: Ariadne, source: Source, sender: Group, member: Memb
     operation = message.display.split(" ")[0]
 
     if operation == "记录" or operation == "w":
-        # TODO: 写入数据到redis 以note_slamp_{date} 为key  sender.id和message为值
-        message = message.display.split(" ")[1]
-        await app.send_message(sender, MessageChain(f"已经调用写入数据功能,获取到数据{message}"), quote=source)
+        # 去掉操作行为的tag
+        message = message.display[2:]
+        # 移除开头的空格
+        while True:
+            if message[0] == " ":
+                message = message[1:]
+            else:
+                break
+        # 组织保存数据用的键值对
+        storage_key = f"StarBot:note:slamp:{sender.id}:{today}"
+        storage_value = {"sender": str(member.id), "time": str(datetime.datetime.now().timestamp()), "message": message}
+        # 数据落盘
+        await redis.rpush(storage_key, str(storage_value))
+        await redis.expire(storage_key, expire_time)
+        await app.send_message(sender, MessageChain(f"推送姬已经帮您记下了呢~♡"), quote=source)
+
     elif operation == "查看" or operation == "r":
         # TODO: 按照note_{date}读取redis数据 转换之后再进行输出
-        await app.send_message(sender, MessageChain(f"已经调用读取数据功能"), quote=source)
+        if len(message.display) > 3:
+            date = message.display.split(" ")[1]
+            storage_key = f'StarBot:note:slamp:{sender.id}:{today.strftime("%Y")}-{date}'
+            logger.info(f'读取群{sender.id}的路灯记录 日期为：{today.strftime("%Y")}-{date}')
+        else:
+            storage_key = f"StarBot:note:slamp:{sender.id}:{today}"
+            logger.info(f"读取群{sender.id}的路灯记录 日期为：{today}")
+
+        try:
+            readed_value = await redis.lrange(storage_key, 0, -1)
+            # send_message = "{}的路灯记录：".format(str(today))
+            send_message = f"为您找到了{today}的路灯记录了呐 \n"
+            for i in readed_value:
+                record = eval(i)
+                # send_time = str(datetime.datetime.fromtimestamp(float(record['time'])).strftime('%H:%m'))
+                # sender_id = str(record['sender'])
+                send_message = send_message + f"{datetime.datetime.fromtimestamp(float(record['time'])).strftime('%H:%m')} \t {record['sender']} \t {record['message']} \n"
+            await app.send_message(sender, MessageChain(f"{send_message}"), quote=source)
+        except:
+            await app.send_message(sender, MessageChain(f"很抱歉呢，没有查询到有人插入喔~"), quote=source)
+
+
