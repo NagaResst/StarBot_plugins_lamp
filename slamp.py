@@ -11,7 +11,6 @@ from loguru import logger
 from ...utils import config
 from ...utils import redis
 import datetime
-from json import dumps, loads
 
 
 logger.info(f"加载路灯命令模块")
@@ -60,7 +59,7 @@ async def slamp_record(app: Ariadne, source: Source, sender: Group, member: Memb
                 break
         # 组织保存数据用的键值对
         storage_key = f"StarBot:note:slamp:{sender.id}:{today}"
-        storage_value = {"sender": str(member.id), "time": str(datetime.datetime.now().timestamp()), "message": message}
+        storage_value = {"sender": str(member.id), "time": datetime.datetime.now().strftime('%H:%m'), "message": message}
         # 数据落盘
         await redis.rpush(storage_key, str(storage_value))
         await redis.expire(storage_key, expire_time)
@@ -72,19 +71,18 @@ async def slamp_record(app: Ariadne, source: Source, sender: Group, member: Memb
             date = message.display.split(" ")[1]
             storage_key = f'StarBot:note:slamp:{sender.id}:{today.strftime("%Y")}-{date}'
             logger.info(f'读取群{sender.id}的路灯记录 日期为：{today.strftime("%Y")}-{date}')
+            send_message = f"为您找到了{date}的路灯记录了呐 \n"
         else:
             storage_key = f"StarBot:note:slamp:{sender.id}:{today}"
             logger.info(f"读取群{sender.id}的路灯记录 日期为：{today}")
+            send_message = f"为您找到了{today}的路灯记录了呐 \n"
 
         try:
             readed_value = await redis.lrange(storage_key, 0, -1)
-            # send_message = "{}的路灯记录：".format(str(today))
-            send_message = f"为您找到了{today}的路灯记录了呐 \n"
             for i in readed_value:
                 record = eval(i)
-                # send_time = str(datetime.datetime.fromtimestamp(float(record['time'])).strftime('%H:%m'))
-                # sender_id = str(record['sender'])
-                send_message = send_message + f"{datetime.datetime.fromtimestamp(float(record['time'])).strftime('%H:%m')} \t {record['sender']} \t {record['message']} \n"
+                logger.info(record)
+                send_message = send_message + f"{record['time']} \t {record['sender']} \t {record['message']} \n"
             await app.send_message(sender, MessageChain(f"{send_message}"), quote=source)
         except:
             await app.send_message(sender, MessageChain(f"很抱歉呢，没有查询到有人插入喔~"), quote=source)
