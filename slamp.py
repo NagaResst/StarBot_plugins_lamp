@@ -75,16 +75,17 @@ async def slamp_record(app: Ariadne, source: Source, sender: Group, member: Memb
         else:
             storage_key = f"StarBot:note:slamp:{sender.id}:{today}"
             logger.info(f"读取群{sender.id}的路灯记录 日期为：{today}")
-            send_message = f"为您找到了{today}的路灯记录了呐 \n"
+            send_message = f"为您找到了今天的路灯记录了呐 \n"
 
-        try:
-            readed_value = await redis.lrange(storage_key, 0, -1)
+        readed_value = await redis.lrange(storage_key, 0, -1)
+
+        if len(readed_value) != 0:
             for i in readed_value:
                 record = eval(i)
                 logger.info(record)
                 send_message = send_message + f"{record['time']} \t {record['sender']} \t {record['message']} \n"
             await app.send_message(sender, MessageChain(f"{send_message}"), quote=source)
-        except:
+        else:
             await app.send_message(sender, MessageChain(f"很抱歉呢，没有查询到有人插入喔~"), quote=source)
 
 
