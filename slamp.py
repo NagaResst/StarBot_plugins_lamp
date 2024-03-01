@@ -8,8 +8,8 @@ from graia.saya import Channel
 from graia.saya.builtins.broadcast import ListenerSchema
 from loguru import logger
 
-from ...utils import config
-from ...utils import redis
+from starbot.utils import config
+from starbot.utils import redis
 import datetime
 
 

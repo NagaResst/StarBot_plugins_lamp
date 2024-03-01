@@ -1,32 +1,14 @@
 # StarBot-plugins-lamp
 一个StarBot的路灯插件，服务于剪切片的dd们
 
-## 安装本插件
+## 安装插件
+下载代码解压或者使用git克隆代码 到main.py 所在的文件夹中  
+如果文件夹名称带 -main 请手动删除，确保文件夹名称为 StarBot_plugins_lamp
 
-进入 statbot/commands 目录后克隆代码
-
-### 通过源码安装的 StarBot
-
-```shell
-cd statbot/commands
-git clone https://github.com/NagaResst/StarBot_plugins_lamp.git
-```
-
-### 通过pip安装的 StarBot
-
-```shell
-# ubuntu 22.04
-cd /usr/local/lib/python3.10/dist-packages/starbot/commands
-git clone https://github.com/NagaResst/StarBot_plugins_lamp.git
-```
-
-
-### 启用插件
-在 main.py 中加入以下配置
-
+## 启用插件
 ```
 # 加载路灯模块
-config.set("CUSTOM_COMMANDS_PACKAGE","starbot.commands.StarBot_plugins_lamp")
+config.set("CUSTOM_COMMANDS_PACKAGE","StarBot_plugins_lamp")
 # 允许使用路灯的群号 逗号分割
 config.set("ALLOW_GROUP_USE_SLAMP",[])
 # 路灯记录保留的天数

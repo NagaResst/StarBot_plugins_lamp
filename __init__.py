@@ -1,2 +1,2 @@
-import starbot.commands.StarBot_plugins_lamp.slamp
+import StarBot_plugins_lamp.slamp
 
