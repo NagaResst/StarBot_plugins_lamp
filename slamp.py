@@ -22,7 +22,6 @@ try:
 except:
     expire_time = 604800
 
-today = datetime.date.today()
 
 channel = Channel.current()
 
@@ -39,7 +38,8 @@ channel = Channel.current()
     )
 )
 async def slamp_record(app: Ariadne, source: Source, sender: Group, member: Member, message: MessageChain = ResultValue()):
-    logger.info(f"群[{sender.id}] 触发命令 : 路灯  {message} ")
+    logger.info(f"群[{sender.id}] 触发命令 : 路灯  {message}")
+    today = datetime.date.today()
     #
     if _allow_group_list is False or len(_allow_group_list) == 0:
         logger.warning(f"由于配置为空的问题，允许所有的群使用路灯功能")
@@ -59,7 +59,7 @@ async def slamp_record(app: Ariadne, source: Source, sender: Group, member: Memb
                 break
         # 组织保存数据用的键值对
         storage_key = f"StarBot:note:slamp:{sender.id}:{today}"
-        storage_value = {"sender": str(member.id), "time": datetime.datetime.now().strftime('%H:%m'), "message": message}
+        storage_value = {"sender": str(member.id), "time": datetime.datetime.now().strftime('%H:%M'), "message": message}
         # 数据落盘
         await redis.rpush(storage_key, str(storage_value))
         await redis.expire(storage_key, expire_time)
