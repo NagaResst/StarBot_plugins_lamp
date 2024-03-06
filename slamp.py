@@ -66,7 +66,6 @@ async def slamp_record(app: Ariadne, source: Source, sender: Group, member: Memb
         await app.send_message(sender, MessageChain(f"推送姬已经帮您记下了呢~♡"), quote=source)
 
     elif operation == "查看" or operation == "r":
-        # TODO: 按照note_{date}读取redis数据 转换之后再进行输出
         if len(message.display) > 3:
             date = message.display.split(" ")[1]
             storage_key = f'StarBot:note:slamp:{sender.id}:{today.strftime("%Y")}-{date}'
