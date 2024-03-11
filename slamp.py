@@ -85,6 +85,10 @@ async def slamp_record(app: Ariadne, source: Source, sender: Group, member: Memb
                 send_message = send_message + f"{record['time']} \t {record['sender']} \t {record['message']} \n"
             await app.send_message(sender, MessageChain(f"{send_message}"), quote=source)
         else:
-            await app.send_message(sender, MessageChain(f"很抱歉呢，没有查询到有人插入喔~"), quote=source)
+            get_keys = await redis.keys(f'StarBot:note:slamp:{sender.id}:*')
+            for i in get_keys:
+                send_message = "很抱歉呢，没有查询到有人插入喔~ \n 不过推送姬知道过去这几天有人记录过什么:" + str(i[-5:])
+            await app.send_message(sender, MessageChain(f"{send_message}"), quote=source)
+
 
 
